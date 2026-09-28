@@ -140,8 +140,8 @@
         <div class="small">Pulsa para consultar los ejercicios</div>
       </div>
     </div>
-    <div class="workout-grid" id="workoutGrid"></div>
 
+    <div class="workout-grid" id="workoutGrid"></div>
     <p class="footer-note">Tus cambios se guardan en este dispositivo mediante el almacenamiento local del navegador.</p>
   </section>
 
@@ -191,7 +191,7 @@
 
 <script>
 const TYPES=["Recuperación","Bajo estrés 1","Bajo estrés 2","Estrés medio","Pre partido"];
-const DATA_KEY="entrenamientos_app_v2";
+const DATA_KEY="entrenamientos_app_v3";
 const WEEK_KEY="entrenamientos_semana_v2";
 
 const PRELOADED={
@@ -202,7 +202,7 @@ const PRELOADED={
     {block:"Movilidad",name:"Neurodinamia Foam",weight:"",sets:"2",reps:"5",rest:"",substitution:"",pain:"",rpe:"",explanation:"",video:""}
   ],
   "Bajo estrés 1":[
-    {block:"Movilidad",name:"Rotación lateral de tronco cuadrupedia",weight:"",sets:"2",reps:"5",rest:"",substitution:"",pain:"0",rpe:"2",explanation:"",video:""},
+    {block:"Movilidad",name:"Rotación lateral de tronco cuadrupedia",weight:"",sets:"2",reps:"5",rest:"",substitution:"",pain:"0",rpe:"2",explanation:"",video:"https://youtube.com/shorts/QmUPb3o7wdA?feature=share"},
     {block:"Movilidad",name:"Retroversión rodilla apoyada",weight:"",sets:"2",reps:"6",rest:"",substitution:"",pain:"0",rpe:"2",explanation:"",video:""},
     {block:"Fuerza",name:"Zancada ISO + Med Ball",weight:"",sets:"2",reps:"5",rest:"",substitution:"",pain:"0",rpe:"2",explanation:"",video:""},
     {block:"Fuerza",name:"Monster Walk",weight:"",sets:"2",reps:"8 pasos",rest:"",substitution:"",pain:"0",rpe:"2",explanation:"",video:""},
@@ -263,6 +263,7 @@ function renderWeek(){
     $("weekGrid").appendChild(el);
   }
 }
+
 function renderCards(){
   $("workoutGrid").innerHTML="";
   TYPES.forEach(t=>{
@@ -272,13 +273,16 @@ function renderCards(){
     btn.onclick=()=>openWorkout(t);$("workoutGrid").appendChild(btn);
   })
 }
+
 function openWorkout(t){
   selected=t;$("homeView").classList.add("hidden");$("detailView").classList.add("active");
   $("detailName").textContent=t;renderExercises();scrollTo({top:0,behavior:"smooth"})
 }
+
 function closeWorkout(){
   $("detailView").classList.remove("active");$("homeView").classList.remove("hidden");selected=null;editing=null;renderCards();scrollTo({top:0,behavior:"smooth"})
 }
+
 function renderExercises(){
   const list=data[selected]||[];
   $("detailSubtitle").textContent=`${list.length} ejercicio${list.length===1?"":"s"}`;
@@ -313,11 +317,13 @@ function renderExercises(){
   host.querySelectorAll(".edit").forEach(b=>b.onclick=()=>openModal(+b.dataset.i));
   host.querySelectorAll(".del").forEach(b=>b.onclick=()=>delExercise(+b.dataset.i));
 }
+
 const fields={
  block:$("fBlock"),name:$("fName"),weight:$("fWeight"),sets:$("fSets"),reps:$("fReps"),
  rest:$("fRest"),pain:$("fPain"),rpe:$("fRpe"),explanation:$("fExplanation"),
  substitution:$("fSubstitution"),video:$("fVideo")
 };
+
 function openModal(i=null){
   editing=i;$("modalTitle").textContent=i===null?"Añadir ejercicio":"Editar ejercicio";
   const x=i===null?{}:data[selected][i];
@@ -335,12 +341,14 @@ function delExercise(i){
   if(!confirm(`¿Eliminar "${data[selected][i].name}"?`))return;
   data[selected].splice(i,1);saveData();renderExercises()
 }
+
 $("backBtn").onclick=closeWorkout;
 $("addExerciseBtn").onclick=()=>openModal();
 $("cancelBtn").onclick=closeModal;
 $("saveBtn").onclick=saveExercise;
 $("todayBtn").onclick=()=>{weekStart=getMonday(new Date());renderWeek()};
 $("exerciseModal").onclick=e=>{if(e.target===$("exerciseModal"))closeModal()};
+
 renderWeek();renderCards();
 </script>
 </body>
