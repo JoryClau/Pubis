@@ -176,8 +176,6 @@
       </div>
     </div>
     <div id="exerciseList"></div>
-    <button class="primary-btn" id="addExerciseBtn" style="margin-top:14px">+ Añadir ejercicio</button>
-
     <div class="send-panel">
       <button class="send-btn" id="sendWorkoutBtn">✓ Finalizar y enviar entrenamiento</button>
       <div class="send-status" id="sendStatus"></div>
@@ -191,28 +189,30 @@
 
 <div class="modal" id="exerciseModal">
   <div class="sheet">
-    <h3 id="modalTitle">Añadir ejercicio</h3>
+    <h3 id="modalTitle">Editar ejercicio</h3>
+
     <div class="form-grid">
       <div class="field full">
-        <label>Bloque</label>
-        <select id="fBlock">
-          <option>Movilidad</option>
-          <option>Fuerza</option>
-          <option>Fuerza específica</option>
-          <option>Otro</option>
-        </select>
+        <label>Ejercicio</label>
+        <input id="fName" readonly />
       </div>
-      <div class="field full"><label>Ejercicio</label><input id="fName" /></div>
-      <div class="field"><label>Peso</label><input id="fWeight" placeholder="Ej. 3 kg" /></div>
-      <div class="field"><label>Series</label><input id="fSets" inputmode="numeric" /></div>
-      <div class="field"><label>Repeticiones / tiempo</label><input id="fReps" placeholder="Ej. 5 / 20 seg" /></div>
-      <div class="field"><label>Descanso</label><input id="fRest" /></div>
-      <div class="field"><label>Dolor (EVA)</label><input id="fPain" /></div>
-      <div class="field"><label>RPE</label><input id="fRpe" /></div>
-      <div class="field full"><label>Explicación</label><textarea id="fExplanation"></textarea></div>
-      <div class="field full"><label>Sustitución opción 1</label><input id="fSubstitution" /></div>
-      <div class="field full"><label>Vídeo de YouTube</label><input id="fVideo" inputmode="url" placeholder="https://youtube.com/..." /></div>
+
+      <div class="field">
+        <label>Peso</label>
+        <input id="fWeight" placeholder="Ej. 3 kg" />
+      </div>
+
+      <div class="field">
+        <label>Dolor (EVA)</label>
+        <input id="fPain" placeholder="Ej. 2" />
+      </div>
+
+      <div class="field">
+        <label>RPE</label>
+        <input id="fRpe" placeholder="Ej. 6" />
+      </div>
     </div>
+
     <div class="sheet-actions">
       <button class="secondary-btn" id="cancelBtn">Cancelar</button>
       <button class="primary-btn" id="saveBtn">Guardar</button>
@@ -222,7 +222,7 @@
 
 <script>
 const TYPES=["Recuperación","Bajo estrés 1","Bajo estrés 2","Estrés medio","Pre partido"];
-const DATA_KEY="entrenamientos_app_v10";
+const DATA_KEY="entrenamientos_app_v12";
 const WEEK_KEY="entrenamientos_semana_v2";
 
 // CONFIGURACIÓN DE ENVÍO
@@ -366,163 +366,50 @@ function renderExercises(){
         </div>
         ${notes}
         ${x.video?`<div class="video-wrap"><iframe src="${toEmbedUrl(x.video)}" title="Vídeo del ejercicio" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>`:""}
-        <div class="edit-row"><button class="secondary-btn edit" data-i="${i}">Editar</button><button class="danger-btn del" data-i="${i}">Eliminar</button></div>`;
+        <div class="edit-row"><button class="secondary-btn edit" data-i="${i}">Editar peso, dolor y RPE</button></div>`;
       host.appendChild(c);
     })
   });
   host.querySelectorAll(".edit").forEach(b=>b.onclick=()=>openModal(+b.dataset.i));
-  host.querySelectorAll(".del").forEach(b=>b.onclick=()=>delExercise(+b.dataset.i));
 }
 
 const fields={
- block:$("fBlock"),name:$("fName"),weight:$("fWeight"),sets:$("fSets"),reps:$("fReps"),
- rest:$("fRest"),pain:$("fPain"),rpe:$("fRpe"),explanation:$("fExplanation"),
- substitution:$("fSubstitution"),video:$("fVideo")
+  name:$("fName"),
+  weight:$("fWeight"),
+  pain:$("fPain"),
+  rpe:$("fRpe")
 };
 
-function openModal(i=null){
-  editing=i;$("modalTitle").textContent=i===null?"Añadir ejercicio":"Editar ejercicio";
-  const x=i===null?{}:data[selected][i];
-  Object.entries(fields).forEach(([k,el])=>el.value=x[k]|| (k==="block"?"Movilidad":""));
-  $("exerciseModal").classList.add("open")
+function openModal(i){
+  editing=i;
+  $("modalTitle").textContent="Editar ejercicio";
+
+  const x=data[selected][i];
+
+  fields.name.value=x.name || "";
+  fields.weight.value=x.weight || "";
+  fields.pain.value=x.pain || "";
+  fields.rpe.value=x.rpe || "";
+
+  $("exerciseModal").classList.add("open");
 }
+
 function closeModal(){$("exerciseModal").classList.remove("open");editing=null}
 function saveExercise(){
-  if(!fields.name.value.trim()){alert("Introduce el nombre del ejercicio.");return}
-  const x={};Object.entries(fields).forEach(([k,el])=>x[k]=el.value.trim());
-  if(editing===null)data[selected].push(x);else data[selected][editing]=x;
-  saveData();closeModal();renderExercises()
-}
-function delExercise(i){
-  if(!confirm(`¿Eliminar "${data[selected][i].name}"?`))return;
-  data[selected].splice(i,1);saveData();renderExercises()
-}
+  if(editing===null || editing===undefined) return;
 
+  const current=data[selected][editing];
 
-function getSentLog(){
-  try{
-    return JSON.parse(localStorage.getItem(SENT_KEY) || "{}");
-  }catch(e){
-    return {};
-  }
-}
+  current.weight=fields.weight.value.trim();
+  current.pain=fields.pain.value.trim();
+  current.rpe=fields.rpe.value.trim();
 
-function saveSentLog(log){
-  localStorage.setItem(SENT_KEY, JSON.stringify(log));
-}
-
-function formatSessionDate(date){
-  return new Intl.DateTimeFormat("es-ES",{
-    day:"2-digit",
-    month:"2-digit",
-    year:"numeric",
-    hour:"2-digit",
-    minute:"2-digit"
-  }).format(date);
-}
-
-function buildWorkoutText(workoutName, exercises, date){
-  const lines = [];
-  lines.push(`ENTRENAMIENTO: ${workoutName}`);
-  lines.push(`Fecha: ${formatSessionDate(date)}`);
-  lines.push("");
-
-  let currentBlock = "";
-
-  exercises.forEach((exercise, index) => {
-    const block = exercise.block || "Otro";
-
-    if(block !== currentBlock){
-      currentBlock = block;
-      lines.push(currentBlock.toUpperCase());
-      lines.push("");
-    }
-
-    lines.push(`${index + 1}. ${exercise.name || "Ejercicio"}`);
-    lines.push(`Peso: ${exercise.weight || "—"}`);
-    lines.push(`Series: ${exercise.sets || "—"}`);
-    lines.push(`Repeticiones / tiempo: ${exercise.reps || "—"}`);
-    lines.push(`Dolor EVA: ${exercise.pain || "—"}`);
-    lines.push(`RPE: ${exercise.rpe || "—"}`);
-    lines.push("");
-  });
-
-  return lines.join("\n");
-}
-
-async function sendWorkout(){
-  const button = $("sendWorkoutBtn");
-  const status = $("sendStatus");
-
-  status.className = "send-status";
-  status.textContent = "";
-
-  if(!selected){
-    status.className = "send-status error";
-    status.textContent = "No hay ningún entrenamiento seleccionado.";
-    return;
-  }
-
-  if(FORMSPREE_ENDPOINT.includes("REEMPLAZA_ESTO")){
-    status.className = "send-status error";
-    status.textContent = "Falta configurar el endpoint de Formspree en el HTML.";
-    return;
-  }
-
-  const now = new Date();
-  const exercises = data[selected] || [];
-  const sessionId = `${iso(now)}__${selected}`;
-  const sentLog = getSentLog();
-
-  if(sentLog[sessionId]){
-    const resend = confirm(
-      `Este entrenamiento ya figura como enviado hoy (${sentLog[sessionId]}). ¿Quieres volver a enviarlo?`
-    );
-    if(!resend) return;
-  }
-
-  const text = buildWorkoutText(selected, exercises, now);
-
-  const payload = {
-    _subject: `Entrenamiento - ${selected} - ${iso(now)}`,
-    entrenamiento: selected,
-    fecha: formatSessionDate(now),
-    detalle: text
-  };
-
-  button.disabled = true;
-  button.textContent = "Enviando…";
-
-  try{
-    const response = await fetch(FORMSPREE_ENDPOINT,{
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-        "Accept":"application/json"
-      },
-      body:JSON.stringify(payload)
-    });
-
-    if(!response.ok){
-      throw new Error("No se pudo enviar el entrenamiento.");
-    }
-
-    sentLog[sessionId] = formatSessionDate(now);
-    saveSentLog(sentLog);
-
-    status.className = "send-status ok";
-    status.textContent = `✓ Entrenamiento enviado correctamente · ${formatSessionDate(now)}`;
-  }catch(error){
-    status.className = "send-status error";
-    status.textContent = "No se pudo enviar. Comprueba la conexión y la configuración de Formspree.";
-  }finally{
-    button.disabled = false;
-    button.textContent = "✓ Finalizar y enviar entrenamiento";
-  }
+  saveData();
+  closeModal();
+  renderExercises();
 }
 
 $("backBtn").onclick=closeWorkout;
-$("addExerciseBtn").onclick=()=>openModal();
 $("sendWorkoutBtn").onclick=sendWorkout;
 $("cancelBtn").onclick=closeModal;
 $("saveBtn").onclick=saveExercise;
